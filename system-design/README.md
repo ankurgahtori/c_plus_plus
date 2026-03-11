@@ -43,6 +43,7 @@ Design patterns are grouped into three categories: **Creational** (object creati
 | | | State Machine |
 | | | Command |
 | | | Chain of Responsibility |
+| | | Memento |
 
 ---
 
@@ -70,6 +71,10 @@ class Database {
 }
 ```
 
+*Example:* A parking lot manager—only one instance coordinates all floors and spots. Same `getInstance()` used from entry gate, exit gate, and admin dashboard.
+
+---
+
 #### Factory (Simple Factory)
 
 **Purpose:** Centralize object creation logic. Clients request objects without knowing the concrete class; the factory decides which class to instantiate based on input.
@@ -90,6 +95,10 @@ function createVehicle(type, plate) {
 }
 ```
 
+*Example:* Parking lot receives `"car"` or `"truck"` from a sensor—factory returns the right vehicle type without the gate logic knowing concrete classes.
+
+---
+
 #### Builder
 
 **Purpose:** Separate the construction of a complex object from its representation. Same construction process can create different representations. Provides a fluent API for step-by-step construction.
@@ -107,6 +116,8 @@ class QueryBuilder {
   build() { return this.query; }
 }
 ```
+
+*Example:* Building a search query step-by-step: `.select('id','name').where({status:'active'}).build()`—readable, flexible, no giant constructor.
 
 ---
 
@@ -131,6 +142,10 @@ class Adapter {
 }
 ```
 
+*Example:* Legacy payment API returns `{amount, ref}` but your cart expects `{data: {...}}`. Adapter wraps the old API so the cart can call `fetch()` without changes.
+
+---
+
 #### Decorator
 
 **Purpose:** Attach additional responsibilities to an object dynamically. Provides a flexible alternative to subclassing for extending functionality. Wraps the original object and delegates to it while adding behavior.
@@ -148,6 +163,10 @@ class MilkDecorator {
 }
 ```
 
+*Example:* Start with plain coffee (5), wrap with `MilkDecorator` (+2), then `SugarDecorator` (+1)—final cost 8. Add/remove add-ons without changing base class.
+
+---
+
 #### Composite
 
 **Purpose:** Compose objects into tree structures. Lets clients treat individual objects and compositions uniformly. Part-whole hierarchies.
@@ -157,6 +176,8 @@ class MilkDecorator {
 **Benefits:** Uniform treatment of single and composite objects; easy to add new kinds of components; simplifies client code.
 
 **Use cases:** Shopping cart with items, file systems (files and folders), UI component trees, organization charts.
+
+*Example:* Shopping cart treats a single `CartItem` and a `ProductBundle` (group of items) the same—both have `getSubtotal()`. Client code doesn't care if it's one item or a bundle.
 
 ---
 
@@ -181,6 +202,10 @@ class Sorter { constructor(strategy) { this.strategy = strategy; }
   sort(data) { return this.strategy.sort(data); } }
 ```
 
+*Example:* Parking lot uses `FirstAvailableStrategy` to find a spot. Swap to `NearestToEntryStrategy` without changing `ParkingLot`—just inject a different strategy.
+
+---
+
 #### Template Method
 
 **Purpose:** Define the skeleton of an algorithm in a base class. Subclasses override specific steps without changing the overall structure. The base class calls the overridden methods.
@@ -200,6 +225,10 @@ class Processor {
 }
 ```
 
+*Example:* Snake and Ladder both extend `SpecialEntity`—same `getActionPosition()` / `getEndPosition()`, but Snake goes down, Ladder goes up. Same board logic, different behavior.
+
+---
+
 #### Observer
 
 **Purpose:** Define a one-to-many dependency. When the subject (publisher) changes state, all observers (subscribers) are notified and updated automatically.
@@ -217,6 +246,10 @@ class Subject {
   notify(data) { this.observers.forEach(o => o.update(data)); }
 }
 ```
+
+*Example:* Movie ticket booking—when a seat is booked, `Show` notifies all subscribed users (email, SMS). Add new notification types by adding observers, no change to booking logic.
+
+---
 
 #### State Machine (State Pattern)
 
@@ -236,6 +269,10 @@ class VendingMachine {
 }
 ```
 
+*Example:* Vending machine: `IdleState` → insert coin → `HasCoinState` → select product → `DispenseState`. Each state handles the same actions differently (e.g., "insert coin" in Idle vs HasCoin).
+
+---
+
 #### Command
 
 **Purpose:** Encapsulate a request as an object. Parameterize clients with different requests, queue or log requests, and support undoable operations. Decouples the invoker from the receiver.
@@ -253,6 +290,10 @@ class LightOnCommand {
 }
 ```
 
+*Example:* Remote control stores `LightOnCommand` and `LightOffCommand`. Press button → `execute()`. Commands can be queued for macros or logged for audit.
+
+---
+
 #### Chain of Responsibility
 
 **Purpose:** Pass a request along a chain of handlers. Each handler decides whether to process the request or pass it to the next handler.
@@ -262,6 +303,36 @@ class LightOnCommand {
 **Benefits:** Decouples sender from receiver; flexible—add or reorder handlers; single responsibility per handler.
 
 **Use cases:** ATM cash dispenser, middleware pipelines, event bubbling, validation chains.
+
+*Example:* ATM dispenses cash—request goes to $100 handler, then $50, then $20. Each handler uses what it can and passes the remainder. Add new denominations by adding handlers.
+
+---
+
+#### Memento
+
+**Purpose:** Capture and externalize an object's internal state so it can be restored later—without exposing the object's structure. Enables undo, rollback, or checkpoint/restore.
+
+**When to use:** When you need to save and restore an object's state, support undo/redo, or implement snapshots (e.g., editors, games, configuration).
+
+**Benefits:** Preserves encapsulation—originator doesn't expose internals; easy to add checkpoints; supports multiple undo levels with a history stack.
+
+**Use cases:** Text editor undo, game save/load, form draft recovery, configuration rollback, database transactions.
+
+```javascript
+class Memento {
+  constructor(state) { this.state = { ...state }; }
+  getState() { return this.state; }
+}
+class Editor {
+  constructor() { this.content = ''; }
+  write(text) { this.content += text; }
+  save() { return new Memento({ content: this.content }); }
+  restore(m) { this.content = m.getState().content; }
+}
+// Usage: history.push(editor.save()); editor.restore(history.pop());
+```
+
+*Example:* Text editor—each keystroke can push a `Memento` onto a history stack. Undo pops the memento and restores the editor. Game save writes memento to disk; load reads and restores.
 
 ---
 
